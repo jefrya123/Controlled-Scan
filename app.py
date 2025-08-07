@@ -11,9 +11,7 @@ from datetime import datetime
 import hashlib
 import secrets
 
-# Add the parent directory to path to import your scanner
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Import local scanner modules
 from scanner import scan_file
 from logger import PIILogger
 
