@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PII Scanner Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #ecf0f1;
+        }
+
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .upload-area p {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .upload-area small {
+            color: #95a5a6;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .results-header h3 {
+            color: #2c3e50;
+        }
+
+        .file-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .pii-category {
+            margin-bottom: 25px;
+        }
+
+        .pii-category h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .controlled h4 {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .non-controlled h4 {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .pii-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #ddd;
+        }
+
+        .controlled .pii-item {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .non-controlled .pii-item {
+            border-left-color: #2196f3;
+            background: #e3f2fd;
+        }
+
+        .pii-type {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .pii-value {
+            font-family: monospace;
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+
+        .confidence {
+            float: right;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .no-pii {
+            text-align: center;
+            color: #27ae60;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .feedback-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .feedback-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .rating {
+            margin-bottom: 20px;
+        }
+
+        .rating label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .stars {
+            display: flex;
+            gap: 10px;
+        }
+
+        .star {
+            font-size: 24px;
+            cursor: pointer;
+            color: #ddd;
+        }
+
+        .star.active {
+            color: #f39c12;
+        }
+
+        .feedback-form textarea {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .feedback-form textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 PII Scanner Test</h1>
+            <p>Upload files to test our PII detection system</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <h4>📊 System Statistics</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalScans">0</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalPII">0</div>
+                    <div class="stat-label">PII Found</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="controlledPII">0</div>
+                    <div class="stat-label">Controlled</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="nonControlledPII">0</div>
+                    <div class="stat-label">Non-Controlled</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <p>📁 Drag & drop files here</p>
+                <p>or click to browse</p>
+                <small>Supports: .txt, .csv, .pdf, .docx, .xlsx, .json, .xml, .html, .md, .log, .sql, .yaml</small>
+                <input type="file" id="fileInput" accept=".txt,.csv,.pdf,.docx,.xlsx,.json,.xml,.html,.htm,.md,.log,.sql,.yaml,.yml,.ini,.cfg" multiple>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px; color: #2c3e50;">📋 Supported File Types</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                    <div>
+                        <strong>Text Files:</strong><br>
+                        .txt, .md, .log, .sql, .ini, .cfg
+                    </div>
+                    <div>
+                        <strong>Data Files:</strong><br>
+                        .csv, .json, .xml, .yaml, .yml
+                    </div>
+                    <div>
+                        <strong>Documents:</strong><br>
+                        .pdf, .docx, .xlsx
+                    </div>
+                    <div>
+                        <strong>Web Files:</strong><br>
+                        .html, .htm
+                    </div>
+                </div>
+                <p style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                    <strong>Note:</strong> PDF files are processed for text content. Image-based PDFs may require OCR for best results.
+                </p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h3>📋 Scan Results</h3>
+                <button class="btn" onclick="clearResults()">Clear Results</button>
+            </div>
+            
+            <div class="file-info" id="fileInfo"></div>
+            
+            <div class="pii-category controlled" id="controlledSection">
+                <h4>🚨 Controlled PII (US-based)</h4>
+                <div id="controlledPIIList"></div>
+            </div>
+            
+            <div class="pii-category non-controlled" id="nonControlledSection">
+                <h4>🌍 Non-Controlled PII (Foreign)</h4>
+                <div id="nonControlledPIIList"></div>
+            </div>
+        </div>
+
+        <div class="feedback-section">
+            <h3>💬 Feedback</h3>
+            <div class="rating">
+                <label>How would you rate this tool?</label>
+                <div class="stars" id="stars">
+                    <span class="star" data-rating="1">⭐</span>
+                    <span class="star" data-rating="2">⭐</span>
+                    <span class="star" data-rating="3">⭐</span>
+                    <span class="star" data-rating="4">⭐</span>
+                    <span class="star" data-rating="5">⭐</span>
+                </div>
+            </div>
+            
+            <div class="feedback-form">
+                <textarea id="feedbackText" placeholder="Tell us about your experience, any issues you found, or suggestions for improvement..."></textarea>
+                <button class="btn" onclick="submitFeedback()">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+        let fileTypesTested = [];
+
+        // Load stats on page load
+        window.onload = function() {
+            loadStats();
+        };
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                uploadFile(file);
+            });
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Track file type
+            const fileType = file.name.split('.').pop().toLowerCase();
+            if (!fileTypesTested.includes(fileType)) {
+                fileTypesTested.push(fileType);
+            }
+
+            // Show loading
+            showLoading();
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    displayResults(result);
+                    loadStats(); // Refresh stats
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.detail);
+                }
+            } catch (error) {
+                alert('Error uploading file: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Processing file...</p>
+                </div>
+            `;
+        }
+
+        function hideLoading() {
+            // Loading will be replaced by results
+        }
+
+        function displayResults(result) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            resultsSection.innerHTML = `
+                <div class="results-header">
+                    <h3>📋 Scan Results</h3>
+                    <button class="btn" onclick="clearResults()">Clear Results</button>
+                </div>
+                
+                <div class="file-info">
+                    <strong>File:</strong> ${result.filename}<br>
+                    <strong>Size:</strong> ${formatFileSize(result.file_size)}<br>
+                    <strong>Total PII Found:</strong> ${result.total_findings}<br>
+                    <strong>Processed:</strong> ${new Date(result.timestamp).toLocaleString()}
+                </div>
+                
+                <div class="pii-category controlled">
+                    <h4>🚨 Controlled PII (US-based) - ${result.controlled_pii.length}</h4>
+                    <div id="controlledPIIList">
+                        ${result.controlled_pii.length > 0 ? 
+                            result.controlled_pii.map(item => `
+                                <div class="pii-item">
+                                    <span class="pii-type">${item.entity_type}</span>
+                                    <span class="pii-value">${item.value}</span>
+                                    <span class="confidence">${Math.round(item.confidence * 100)}%</span>
+                                </div>
+                            `).join('') : 
+                            '<div class="no-pii">No controlled PII found</div>'
+                        }
+                    </div>
+                </div>
+                
+                <div class="pii-category non-controlled">
+                    <h4>🌍 Non-Controlled PII (Foreign) - ${result.non_controlled_pii.length}</h4>
+                    <div id="nonControlledPIIList">
+                        ${result.non_controlled_pii.length > 0 ? 
+                            result.non_controlled_pii.map(item => `
+                                <div class="pii-item">
+                                    <span class="pii-type">${item.entity_type}</span>
+                                    <span class="pii-value">${item.value}</span>
+                                    <span class="confidence">${Math.round(item.confidence * 100)}%</span>
+                                </div>
+                            `).join('') : 
+                            '<div class="no-pii">No non-controlled PII found</div>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Star rating
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = parseInt(star.dataset.rating);
+                currentRating = rating;
+                updateStars(rating);
+            });
+        });
+
+        function updateStars(rating) {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        async function submitFeedback() {
+            const feedback = document.getElementById('feedbackText').value;
+            
+            if (!feedback.trim()) {
+                alert('Please provide some feedback');
+                return;
+            }
+
+            const feedbackData = {
+                feedback: feedback,
+                rating: currentRating,
+                user_agent: navigator.userAgent,
+                file_types: fileTypesTested,
+                issues: []
+            };
+
+            try {
+                const response = await fetch('/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(feedbackData)
+                });
+
+                if (response.ok) {
+                    alert('Thank you for your feedback!');
+                    document.getElementById('feedbackText').value = '';
+                    currentRating = 0;
+                    updateStars(0);
+                    fileTypesTested = [];
+                } else {
+                    alert('Error submitting feedback');
+                }
+            } catch (error) {
+                alert('Error submitting feedback: ' + error.message);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/stats');
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalScans').textContent = stats.total_scans || 0;
+                    document.getElementById('totalPII').textContent = stats.total_pii_found || 0;
+                    document.getElementById('controlledPII').textContent = stats.controlled_pii || 0;
+                    document.getElementById('nonControlledPII').textContent = stats.non_controlled_pii || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+    </script>
+</body>
+</html> 
