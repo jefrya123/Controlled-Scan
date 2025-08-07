@@ -10,6 +10,7 @@ import sqlite3
 from datetime import datetime
 import hashlib
 import secrets
+from typing import List, Dict, Any
 
 # Import local scanner modules
 from scanner import scan_file
