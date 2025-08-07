@@ -385,12 +385,12 @@
             <div class="file-info" id="fileInfo"></div>
             
             <div class="pii-category controlled" id="controlledSection">
-                <h4>🚨 Controlled PII (US-based)</h4>
+                <h4>🚨 Controlled PII (High Priority)</h4>
                 <div id="controlledPIIList"></div>
             </div>
             
             <div class="pii-category non-controlled" id="nonControlledSection">
-                <h4>🌍 Non-Controlled PII (Foreign)</h4>
+                <h4>🌍 Non-Controlled PII (Lower Priority)</h4>
                 <div id="nonControlledPIIList"></div>
             </div>
         </div>
@@ -522,7 +522,7 @@
                 </div>
                 
                 <div class="pii-category controlled">
-                    <h4>🚨 Controlled PII (US-based) - ${result.controlled_pii.length}</h4>
+                    <h4>🚨 Controlled PII - ${result.controlled_pii.length}</h4>
                     <div id="controlledPIIList">
                         ${result.controlled_pii.length > 0 ? 
                             result.controlled_pii.map(item => `
@@ -538,7 +538,7 @@
                 </div>
                 
                 <div class="pii-category non-controlled">
-                    <h4>🌍 Non-Controlled PII (Foreign) - ${result.non_controlled_pii.length}</h4>
+                    <h4>🌍 Non-Controlled PII - ${result.non_controlled_pii.length}</h4>
                     <div id="nonControlledPIIList">
                         ${result.non_controlled_pii.length > 0 ? 
                             result.non_controlled_pii.map(item => `
